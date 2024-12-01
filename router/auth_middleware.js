@@ -1,6 +1,5 @@
 const jwt = require("jsonwebtoken");
-const secretKey = "Netskdlkfgdkngkbgnl;dngdfncvlhmlkmndfgfdjkngfdj"; // Replace with a secure key in production
-
+const secretKey = "Netskdlkfgdkngkbgnl;dngdfncvlhmlkmndfgfdjkngfdj"; 
 const authenticateToken = (req, res, next) => {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
@@ -8,7 +7,7 @@ const authenticateToken = (req, res, next) => {
     }
     try {
         const decoded = jwt.verify(token, secretKey);
-        req.user = decoded; // Attach the user info to the request
+        req.user = decoded;
         next();
     } catch (err) {
         return res.status(401).json({ message: "Invalid or expired token" });

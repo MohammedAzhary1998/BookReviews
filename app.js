@@ -1,8 +1,8 @@
 const express = require('express');
 const session = require('express-session');
-const { regd_users } = require('./router/auth_users'); // Registered user routes
-const { public_users } = require('./router/general');  // Public routes
-const { authenticateToken } = require('./router/auth_middleware'); // Middleware for authentication
+const { regd_users } = require('./router/auth_users'); 
+const { public_users } = require('./router/general');  
+const { authenticateToken } = require('./router/auth_middleware'); 
 
 const app = express();
 const PORT = 5000;
@@ -20,8 +20,8 @@ app.use(
 app.use("/customer/auth/*", authenticateToken);
 
 // Routes
-app.use("/customer", regd_users);  // Authenticated routes
-app.use("/", public_users);        // Public routes
+app.use("/customer", regd_users); 
+app.use("/", public_users);        
 
 // Start the server
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
