@@ -1,54 +1,52 @@
-const express = require('express');
-const jwt = require('jsonwebtoken');
+const express = require("express");
+const jwt = require("jsonwebtoken");
+const { authenticateToken, secretKey } = require("./auth_middleware");
 let books = require("./booksdb.js");
+
 const regd_users = express.Router();
+let users = { user1: { password: "pass1" }, user2: { password: "pass2" } };
 
-let users = {
-    "user1":{"password":"pass1"},
-    "user2":{"password":"pass2"}
-};
+const isValid = (username) => /^[a-zA-Z0-9_]{3,20}$/.test(username);
 
-const secretKey = "Netskdlkfgdkngkbgnl;dngdfncvlhmlkmndfgfdjkngfdj"; 
+const authenticatedUser = (username, password) => users[username]?.password === password;
 
-const isValid = (username)=>{ //returns boolean
-//write code to check is the username is valid
-}
+// Login endpoint
+regd_users.post("/login", (req, res) => {
+    const { username, password } = req.body;
 
-// Function to check if username and password match the records
-const authenticatedUser = (username, password) => {
-    if (users[username] && users[username].password === password) {
-      return true; // Return true if the credentials match
-    }
-    return false; // Return false otherwise
-  };
-  
-  // Login endpoint
-  regd_users.post("/login", (req, res) => {
-    const { username, password } = req.body; 
-  
-    // Validate that both username and password are provided
     if (!username || !password) {
-      return res.status(400).json({ message: "Username and password are required" });
+        return res.status(400).json({ message: "Username and password are required" });
     }
-  
-    // Check if the user is authenticated
-    if (authenticatedUser(username, password)) {
-      // Generate a JWT for the session
-      const token = jwt.sign({ username }, secretKey, { expiresIn: "1h" });
-  
-      return res.status(200).json({ message: "Login successful", token });
-    } else {
-      // If authentication fails, return a 401 response
-      return res.status(401).json({ message: "Invalid username or password" });
-    }
-  });
 
-// Add a book review
-regd_users.put("/auth/review/:isbn", (req, res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+    if (authenticatedUser(username, password)) {
+        const token = jwt.sign({ username }, secretKey, { expiresIn: "1h" });
+        return res.status(200).json({ message: "Login successful", token });
+    } else {
+        return res.status(401).json({ message: "Invalid username or password" });
+    }
 });
 
-module.exports.authenticated = regd_users;
-module.exports.isValid = isValid;
-module.exports.users = users;
+// Add or modify a book review
+regd_users.put("/auth/review/:isbn", authenticateToken, (req, res) => {
+    const username = req.user.username; // Extracted from JWT
+    const { isbn } = req.params;
+    const { review } = req.body;
+
+    if (!review) {
+        return res.status(400).json({ message: "Review is required" });
+    }
+
+    const book = books[isbn];
+    if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+    }
+
+    if (!book.reviews) {
+        book.reviews = {};
+    }
+
+    book.reviews[username] = review;
+    return res.status(200).json({ message: "Review added/updated successfully", reviews: book.reviews });
+});
+
+module.exports = { regd_users, isValid, users };
