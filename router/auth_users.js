@@ -28,7 +28,7 @@ regd_users.post("/login", (req, res) => {
 
 // Add or modify a book review
 regd_users.put("/auth/review/:isbn", authenticateToken, (req, res) => {
-    const username = req.user.username; // Extracted from JWT
+    const username = req.user.username; 
     const { isbn } = req.params;
     const { review } = req.body;
 
@@ -48,5 +48,25 @@ regd_users.put("/auth/review/:isbn", authenticateToken, (req, res) => {
     book.reviews[username] = review;
     return res.status(200).json({ message: "Review added/updated successfully", reviews: book.reviews });
 });
+
+// Delete a book review
+regd_users.delete("/auth/review/:isbn", authenticateToken, (req, res) => {
+    const username = req.user.username; 
+    const { isbn } = req.params;
+
+    const book = books[isbn];
+    if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+    }
+
+    if (!book.reviews || !book.reviews[username]) {
+        return res.status(404).json({ message: "Review not found for the user" });
+    }
+
+    delete book.reviews[username];
+
+    return res.status(200).json({ message: "Review deleted successfully", reviews: book.reviews });
+});
+
 
 module.exports = { regd_users, isValid, users };
