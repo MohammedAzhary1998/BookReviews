@@ -8,34 +8,40 @@ let users = {
     "user2":{"password":"pass2"}
 };
 
+const secretKey = "Netskdlkfgdkngkbgnl;dngdfncvlhmlkmndfgfdjkngfdj"; 
+
 const isValid = (username)=>{ //returns boolean
 //write code to check is the username is valid
 }
 
-const authenticatedUser = (username,password)=>{ //returns boolean
-//write code to check if username and password match the one we have in records.
-}
-
-// Only registered users can log in
-regd_users.post("/login", (req, res) => {
-    const { username, password } = req.body; // Extract username and password from the request body
-
+// Function to check if username and password match the records
+const authenticatedUser = (username, password) => {
+    if (users[username] && users[username].password === password) {
+      return true; // Return true if the credentials match
+    }
+    return false; // Return false otherwise
+  };
+  
+  // Login endpoint
+  regd_users.post("/login", (req, res) => {
+    const { username, password } = req.body; 
+  
     // Validate that both username and password are provided
     if (!username || !password) {
-        return res.status(400).json({ message: "Username and password are required" });
+      return res.status(400).json({ message: "Username and password are required" });
     }
-
-    // Check if the username exists and the password matches
-    const user = users[username];
-    if (!user || user.password !== password) {
-        return res.status(401).json({ message: "Invalid username or password" });
+  
+    // Check if the user is authenticated
+    if (authenticatedUser(username, password)) {
+      // Generate a JWT for the session
+      const token = jwt.sign({ username }, secretKey, { expiresIn: "1h" });
+  
+      return res.status(200).json({ message: "Login successful", token });
+    } else {
+      // If authentication fails, return a 401 response
+      return res.status(401).json({ message: "Invalid username or password" });
     }
-
-    // Generate a JWT token for the user
-    const token = jwt.sign({ username }, jwtSecret, { expiresIn: "1h" });
-
-    return res.status(200).json({ message: "Login successful", token });
-});
+  });
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
